@@ -1,0 +1,141 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Build artifacts
+/vision-api
+/tesseract-ocr-app
+/bin/
+/dist/
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go build cache
+.cache/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IDE - JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# IDE - Cursor
+.cursor/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Configuration overrides
+config.local.yaml
+config.*.yaml
+!config.yaml
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Coverage reports
+coverage.out
+coverage.html
+*.coverprofile
+
+# Test cache
+.testcache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# Docker volumes (if running locally)
+/data/
+/mysql_data/
+/redis_data/
+
+# TestContainers
+.testcontainers/
+
+# Profiling data
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+
+# Air (live reload tool)
+tmp/
+.air.toml
+
+# Documentation build artifacts
+/docs/_build/
+/docs/.doctrees/
+
+# Backup files
+*.bak
+*.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+
+# Compiled Object files
+*.o
+*.a
+
+# Debug files
+debug
+__debug_bin
+
+# Editor backup files
+\#*\#
+.#*
+
+# Project specific
+/testdata/output/
+/screenshots/
+/uploads/
+

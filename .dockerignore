@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+tesseract-ocr-app
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*.test
+*.out
+coverage.out
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in container)
+BUILD.md
+
+# Temporary files
+tmp/
+temp/
+

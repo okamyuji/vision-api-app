@@ -1,0 +1,17 @@
+anthropic:
+  api_key: ${ANTHROPIC_API_KEY}
+  model: claude-haiku-4-5-20251001
+  max_tokens: 4096
+
+redis:
+  host: redis
+  port: 6379
+  password: ""
+  db: 0
+
+mysql:
+  host: mysql
+  port: 3306
+  user: root
+  password: ${MYSQL_ROOT_PASSWORD}
+  database: household
