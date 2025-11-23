@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -680,6 +681,60 @@ func TestReceiptUseCase_parseItemCategories(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestReceiptUseCase_ItemIDLength アイテムIDの長さが45文字であることを検証
+func TestReceiptUseCase_ItemIDLength(t *testing.T) {
+	mockAI := &MockAIRepository{}
+	mockReceipt := &MockReceiptRepository{}
+	mockCache := &MockCacheRepository{}
+	uc := NewReceiptUseCase(mockAI, mockReceipt, mockCache)
+
+	// 36文字のレシートIDを使用
+	testReceiptID := "12345678-1234-1234-1234-123456789012"
+
+	receiptJSON := `{
+		"store_name": "Test Store",
+		"purchase_date": "2025-11-23 12:00",
+		"total_amount": 1000,
+		"tax_amount": 100,
+		"items": [
+			{"name": "Item1", "quantity": 1, "price": 500},
+			{"name": "Item2", "quantity": 2, "price": 250}
+		]
+	}`
+
+	receipt, err := uc.parseReceiptJSON(receiptJSON, testReceiptID)
+	if err != nil {
+		t.Fatalf("parseReceiptJSON() error = %v", err)
+	}
+
+	if len(receipt.Items) != 2 {
+		t.Fatalf("Expected 2 items, got %d", len(receipt.Items))
+	}
+
+	for i, item := range receipt.Items {
+		// アイテムIDは45文字であることを確認
+		if len(item.ID) != 45 {
+			t.Errorf("Item[%d] ID length = %d, want 45: %s", i, len(item.ID), item.ID)
+		}
+
+		// アイテムIDがレシートIDで始まることを確認
+		if item.ID[:36] != testReceiptID {
+			t.Errorf("Item[%d] ID should start with receipt ID: got %s, want prefix %s", i, item.ID, testReceiptID)
+		}
+
+		// アイテムIDの形式を確認（36文字のレシートID + "-" + 8桁の数字）
+		expectedID := fmt.Sprintf("%s-%08d", testReceiptID, i)
+		if item.ID != expectedID {
+			t.Errorf("Item[%d] ID = %s, want %s", i, item.ID, expectedID)
+		}
+
+		// データベース制約（VARCHAR(50)）に収まることを確認
+		if len(item.ID) > 50 {
+			t.Errorf("Item[%d] ID length %d exceeds database constraint VARCHAR(50)", i, len(item.ID))
+		}
 	}
 }
 

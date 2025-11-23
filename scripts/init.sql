@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS receipts (
 
 -- Receipt items table
 CREATE TABLE IF NOT EXISTS receipt_items (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY COMMENT 'レシートID(36文字) + ハイフン + インデックス(8桁) = 45文字',
     receipt_id VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
