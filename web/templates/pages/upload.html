@@ -1,0 +1,50 @@
+{{define "content"}}
+<div class="container">
+    <div class="upload-section">
+        <h2>レシート画像をアップロード</h2>
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <div class="file-input-wrapper">
+                <input type="file" id="imageFile" name="image" accept="image/*" required>
+                <label for="imageFile" class="file-label">
+                    <span id="fileName">画像を選択してください</span>
+                </label>
+            </div>
+            
+            <div id="preview" class="preview-area" style="display: none;">
+                <img id="previewImage" src="" alt="プレビュー">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">アップロード</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('imageFile');
+    const fileName = document.getElementById('fileName');
+    const preview = document.getElementById('preview');
+    const previewImage = document.getElementById('previewImage');
+    
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            
+            // プレビュー表示
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '処理中...';
+    });
+</script>
+{{end}}
+

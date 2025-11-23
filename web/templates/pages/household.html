@@ -1,0 +1,56 @@
+{{define "content"}}
+<div class="container">
+    <div class="household-section">
+        <h2>家計簿一覧</h2>
+        
+        {{if .CategorySummary}}
+        <div class="summary-section">
+            <h3>カテゴリ別集計</h3>
+            <div class="summary-grid">
+                {{range .CategorySummary}}
+                <div class="summary-card">
+                    <div class="summary-category">{{.Category}}</div>
+                    <div class="summary-count">{{.Count}}件</div>
+                    <div class="summary-total">¥{{.Total}}</div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        
+        {{if .Receipts}}
+        <div class="receipts-section">
+            <h3>レシート一覧</h3>
+            <table class="receipts-table">
+                <thead>
+                    <tr>
+                        <th>購入日</th>
+                        <th>店舗名</th>
+                        <th>カテゴリ</th>
+                        <th>合計金額</th>
+                        <th>商品数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Receipts}}
+                    <tr class="receipt-row" onclick="window.location.href='/result?id={{.ID}}'">
+                        <td>{{.PurchaseDate.Format "2006/01/02 15:04"}}</td>
+                        <td>{{.StoreName}}</td>
+                        <td>{{if .Category}}{{.Category}}{{else}}-{{end}}</td>
+                        <td class="amount">¥{{.TotalAmount}}</td>
+                        <td>{{len .Items}}点</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="empty-message">
+            <p>レシートがまだ登録されていません。</p>
+            <a href="/" class="btn btn-primary">レシートを登録する</a>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+

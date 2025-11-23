@@ -1,0 +1,78 @@
+{{define "content"}}
+<div class="container">
+    <div class="result-section">
+        <h2>レシート認識結果</h2>
+        
+        {{if .Error}}
+        <div class="error-message">
+            <p>エラー: {{.Error}}</p>
+        </div>
+        {{else}}
+        <div class="receipt-card">
+            <div class="receipt-header">
+                <h3>{{.Receipt.StoreName}}</h3>
+                <p class="date">{{.Receipt.PurchaseDate.Format "2006年01月02日 15:04"}}</p>
+            </div>
+            
+            <div class="receipt-body">
+                <div class="info-row">
+                    <span class="label">合計金額:</span>
+                    <span class="value">¥{{.Receipt.TotalAmount}}</span>
+                </div>
+                
+                {{if .Receipt.TaxAmount}}
+                <div class="info-row">
+                    <span class="label">消費税:</span>
+                    <span class="value">¥{{.Receipt.TaxAmount}}</span>
+                </div>
+                {{end}}
+                
+                {{if .Receipt.PaymentMethod}}
+                <div class="info-row">
+                    <span class="label">支払い方法:</span>
+                    <span class="value">{{.Receipt.PaymentMethod}}</span>
+                </div>
+                {{end}}
+                
+                {{if .Receipt.ReceiptNumber}}
+                <div class="info-row">
+                    <span class="label">レシート番号:</span>
+                    <span class="value">{{.Receipt.ReceiptNumber}}</span>
+                </div>
+                {{end}}
+            </div>
+            
+            {{if .Receipt.Items}}
+            <div class="receipt-items">
+                <h4>購入商品</h4>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>商品名</th>
+                            <th>数量</th>
+                            <th>価格</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Receipt.Items}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.Quantity}}</td>
+                            <td>¥{{.Price}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+        
+        <div class="action-buttons">
+            <a href="/" class="btn btn-secondary">新しいレシートを登録</a>
+            <a href="/household" class="btn btn-primary">家計簿一覧を見る</a>
+        </div>
+    </div>
+</div>
+{{end}}
+

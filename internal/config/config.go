@@ -63,6 +63,14 @@ func Load(configPath string) (*Config, error) {
 
 // DefaultConfig デフォルト設定を返す
 func DefaultConfig() *Config {
+	// Redis/MySQLのホストはテスト環境では localhost を使用
+	redisHost := "redis"
+	mysqlHost := "mysql"
+	if os.Getenv("GO_ENV") == "test" {
+		redisHost = "localhost"
+		mysqlHost = "localhost"
+	}
+
 	return &Config{
 		Anthropic: AnthropicConfig{
 			APIKey:    os.Getenv("ANTHROPIC_API_KEY"),
@@ -70,13 +78,13 @@ func DefaultConfig() *Config {
 			MaxTokens: 4096,
 		},
 		Redis: RedisConfig{
-			Host:     "redis",
+			Host:     redisHost,
 			Port:     6379,
 			Password: "",
 			DB:       0,
 		},
 		MySQL: MySQLConfig{
-			Host:     "mysql",
+			Host:     mysqlHost,
 			Port:     3306,
 			User:     "root",
 			Password: os.Getenv("MYSQL_ROOT_PASSWORD"),

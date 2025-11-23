@@ -1,0 +1,400 @@
+/* リセットとベース設定 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+/* コンテナ */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ヘッダー */
+header {
+    background-color: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+header h1 a {
+    color: #333;
+    text-decoration: none;
+}
+
+header nav {
+    display: flex;
+    gap: 1.5rem;
+}
+
+header nav a {
+    color: #666;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+header nav a:hover {
+    color: #4a90e2;
+}
+
+/* メインコンテンツ */
+main {
+    min-height: calc(100vh - 140px);
+    padding: 2rem 0;
+}
+
+/* フッター */
+footer {
+    background-color: #fff;
+    border-top: 1px solid #e0e0e0;
+    padding: 1.5rem 0;
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* セクション */
+.upload-section,
+.result-section,
+.household-section {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+}
+
+/* ファイル入力 */
+.file-input-wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.file-input-wrapper input[type="file"] {
+    display: none;
+}
+
+.file-label {
+    display: block;
+    padding: 3rem 2rem;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: #fafafa;
+}
+
+.file-label:hover {
+    border-color: #4a90e2;
+    background-color: #f0f7ff;
+}
+
+.file-label span {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* プレビューエリア */
+.preview-area {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.preview-area img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ボタン */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #357abd;
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+/* レシートカード */
+.receipt-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.receipt-header {
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.receipt-header h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.receipt-header .date {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.receipt-body {
+    padding: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.info-row .value {
+    color: #333;
+    font-weight: 600;
+}
+
+/* 商品テーブル */
+.receipt-items {
+    padding: 1.5rem;
+    background-color: #fafafa;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.items-table th,
+.items-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.items-table th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+    color: #333;
+}
+
+.items-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* アクションボタン */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+/* エラーメッセージ */
+.error-message {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #c33;
+}
+
+/* 集計セクション */
+.summary-section {
+    margin-bottom: 2rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.summary-card {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.summary-category {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.summary-count {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.summary-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4a90e2;
+}
+
+/* レシート一覧テーブル */
+.receipts-section {
+    margin-top: 2rem;
+}
+
+.receipts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.receipts-table th,
+.receipts-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.receipts-table th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+    color: #333;
+}
+
+.receipt-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.receipt-row:hover {
+    background-color: #f9f9f9;
+}
+
+.receipts-table .amount {
+    font-weight: 600;
+    color: #4a90e2;
+}
+
+/* 空メッセージ */
+.empty-message {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.empty-message p {
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    header nav {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .receipts-table {
+        font-size: 0.9rem;
+    }
+
+    .receipts-table th,
+    .receipts-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
