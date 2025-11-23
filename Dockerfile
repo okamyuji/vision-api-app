@@ -31,6 +31,9 @@ WORKDIR /root/
 COPY --from=builder /app/vision-api .
 COPY --from=builder /app/config.yaml .
 
+# Copy web templates and static files
+COPY --from=builder /app/web ./web
+
 # Expose port
 EXPOSE 8080
 

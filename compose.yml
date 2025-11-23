@@ -17,6 +17,8 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
+    networks:
+      - vision-network
     restart: unless-stopped
     healthcheck:
       test:
@@ -40,6 +42,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - vision-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -62,6 +66,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - vision-network
     restart: unless-stopped
     healthcheck:
       test:
@@ -78,6 +84,10 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+
+networks:
+  vision-network:
+    driver: bridge
 
 volumes:
   redis_data:
