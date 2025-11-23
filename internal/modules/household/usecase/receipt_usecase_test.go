@@ -327,13 +327,17 @@ func TestReceiptUseCase_ProcessReceiptImage_Deduplication(t *testing.T) {
 		t.Errorf("Expected 1 receipt in storage, got %d", len(savedReceipts))
 	}
 
-	// レシートアイテムのIDが正しい形式であることを確認（36文字）
+	// レシートアイテムのIDが正しい形式であることを確認（45文字：36文字のレシートID + "-" + 8桁のインデックス）
 	for _, item := range receipt1.Items {
-		if len(item.ID) != 36 {
-			t.Errorf("Item ID length should be 36, got %d: %s", len(item.ID), item.ID)
+		if len(item.ID) != 45 {
+			t.Errorf("Item ID length should be 45, got %d: %s", len(item.ID), item.ID)
 		}
 		if item.ReceiptID != receipt1.ID {
 			t.Errorf("Item ReceiptID should match receipt ID: got %s, want %s", item.ReceiptID, receipt1.ID)
+		}
+		// アイテムIDがレシートIDで始まることを確認
+		if len(item.ID) >= len(receipt1.ID) && item.ID[:len(receipt1.ID)] != receipt1.ID {
+			t.Errorf("Item ID should start with receipt ID: got %s, want prefix %s", item.ID, receipt1.ID)
 		}
 	}
 }
@@ -711,11 +715,15 @@ func TestReceiptUseCase_parseReceiptJSON(t *testing.T) {
 			// 正常ケースの場合、アイテムIDの長さを確認
 			if !tt.wantErr && receipt != nil {
 				for _, item := range receipt.Items {
-					if len(item.ID) != 36 {
-						t.Errorf("Item ID length should be 36, got %d: %s", len(item.ID), item.ID)
+					if len(item.ID) != 45 {
+						t.Errorf("Item ID length should be 45, got %d: %s", len(item.ID), item.ID)
 					}
 					if item.ReceiptID != testReceiptID {
 						t.Errorf("Item ReceiptID should match receipt ID: got %s, want %s", item.ReceiptID, testReceiptID)
+					}
+					// アイテムIDがレシートIDで始まることを確認
+					if len(item.ID) >= len(testReceiptID) && item.ID[:len(testReceiptID)] != testReceiptID {
+						t.Errorf("Item ID should start with receipt ID: got %s, want prefix %s", item.ID, testReceiptID)
 					}
 				}
 			}

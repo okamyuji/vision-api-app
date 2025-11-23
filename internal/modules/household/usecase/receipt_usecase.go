@@ -172,11 +172,11 @@ func (uc *ReceiptUseCase) parseReceiptJSON(receiptJSON string, receiptID string)
 	// 商品アイテムの追加
 	for i, item := range receiptData.Items {
 		if item.Name != "" {
-			// アイテムIDはレシートIDの先頭27文字 + "-" + インデックス（8桁）で36文字のUUID-like識別子を生成します
+			// アイテムIDはレシートID（36文字） + "-" + インデックス（8桁）で45文字の識別子を生成します
 			// これはRFC 4122準拠のUUIDではなく、レシートとの関連性を保持するためのカスタム識別子です
-			// 例: b5377e40-a9f1-4426-6dfe-bd1-00000000
+			// 例: b5377e40-a9f1-4426-6dfe-bd1e2c3f4a5b-00000000
 			// インデックスは8桁（最大99,999,999アイテム）で実用上十分な範囲をカバーします
-			itemID := fmt.Sprintf("%s-%08d", receiptID[:27], i)
+			itemID := fmt.Sprintf("%s-%08d", receiptID, i)
 			receiptItem := entity.ReceiptItem{
 				ID:        itemID,
 				ReceiptID: receiptID,

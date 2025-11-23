@@ -222,3 +222,47 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 		})
 	}
 }
+
+// TestHouseholdUseCase_GetCategorySummary_LargeValues 大きな値でのオーバーフロー対策テスト
+func TestHouseholdUseCase_GetCategorySummary_LargeValues(t *testing.T) {
+	// 大きな値でもオーバーフローしないことを確認
+	mockReceipt := &MockReceiptRepository{
+		FindAllFunc: func(ctx context.Context, limit, offset int) ([]*entity.Receipt, error) {
+			return []*entity.Receipt{
+				{
+					ID: "1",
+					Items: []entity.ReceiptItem{
+						// 大きな値の乗算でもオーバーフローしないことを確認
+						{Name: "高額商品", Category: "食費", Price: 1000000, Quantity: 100},
+					},
+				},
+			}, nil
+		},
+	}
+	mockExpense := &MockExpenseRepository{
+		FindAllFunc: func(ctx context.Context, limit, offset int) ([]*entity.ExpenseEntry, error) {
+			return []*entity.ExpenseEntry{}, nil
+		},
+	}
+
+	uc := NewHouseholdUseCase(mockReceipt, mockExpense)
+	ctx := context.Background()
+
+	summary, err := uc.GetCategorySummary(ctx)
+	if err != nil {
+		t.Fatalf("GetCategorySummary() error = %v", err)
+	}
+
+	if len(summary) != 1 {
+		t.Errorf("Expected 1 category, got %d", len(summary))
+	}
+
+	if summary[0].Category != "食費" {
+		t.Errorf("Expected category '食費', got '%s'", summary[0].Category)
+	}
+
+	expectedTotal := 100000000 // 1000000 * 100
+	if summary[0].Total != expectedTotal {
+		t.Errorf("Expected total %d, got %d", expectedTotal, summary[0].Total)
+	}
+}

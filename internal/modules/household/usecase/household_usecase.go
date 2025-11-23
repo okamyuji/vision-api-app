@@ -59,7 +59,8 @@ func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategoryS
 				}
 			}
 			summaryMap[category].Count++
-			summaryMap[category].Total += item.Price * item.Quantity
+			// オーバーフロー対策：int64にキャストしてから計算
+			summaryMap[category].Total += int(int64(item.Price) * int64(item.Quantity))
 		}
 	}
 

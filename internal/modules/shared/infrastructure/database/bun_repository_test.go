@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -369,8 +370,8 @@ func TestBunExpenseRepository_FindAll(t *testing.T) {
 	// テストデータ作成
 	for i := 0; i < 5; i++ {
 		entry := &entity.ExpenseEntry{
-			ID:          string(rune('a' + i)),
-			Description: "Expense " + string(rune('A'+i)),
+			ID:          fmt.Sprintf("e%d", i),
+			Description: fmt.Sprintf("Expense %c", 'A'+i),
 			Amount:      100 * (i + 1),
 			Date:        time.Now().Add(time.Duration(i) * time.Hour).Truncate(time.Second),
 			Category:    "Test",
