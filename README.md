@@ -1,13 +1,18 @@
-# Vision API Server (Go版 - Clean Architecture)
+# Vision API Server (Go版 - Modular Monolith)
 
-Claude Vision APIを使用した画像認識Web APIサーバー（Go実装、Clean Architecture設計）
+Claude Vision APIを使用した画像認識Web APIサーバー + 家計簿Web UI（Go実装、Modular Monolith設計）
 
 ## 概要
 
-Claude Vision API（Haiku 4.5）を使用して画像からテキストを抽出するRESTful API。Clean Architectureに基づいた設計により、高いテスタビリティと保守性を実現。
+Claude Vision API（Haiku 4.5）を使用してレシート画像から情報を抽出し、家計簿として管理するWebアプリケーション。Modular Monolith + Clean Architectureに基づいた設計により、高いテスタビリティと保守性を実現。
 
 ## 特徴
 
+- **Modular Monolith アーキテクチャ**: 機能別モジュール分割による高い保守性
+- **Web UI**: 標準の`html/template`のみを使用したシンプルなUI
+    - レシート画像アップロード画面（ファイル選択・カメラ撮影対応）
+    - レシート認識結果表示画面
+    - 家計簿一覧画面（カテゴリ別集計付き）
 - **Claude Vision API**: Claude Haiku 4.5による高精度な画像認識
 - **用途別プロンプト最適化**:
     - レシート読み取り専用プロンプト（JSON形式で構造化データ抽出）
@@ -19,27 +24,52 @@ Claude Vision API（Haiku 4.5）を使用して画像からテキストを抽出
 - **Redis Caching**: アプリケーション層での24時間キャッシュ
 - **MySQL Database**: レシート・家計簿データの永続化
 - **Docker対応**: コンテナ化による環境依存の解決
-- **高いテストカバレッジ**: 80%以上のユニットテストカバレッジ
+- **高いテストカバレッジ**: 90%以上のユニットテストカバレッジ
 - **構造化ログ**: log/slogによる構造化ログ出力
 
 ## アーキテクチャ
 
+### Modular Monolith 構造
+
+```text
+internal/
+├── modules/
+│   ├── vision/              # Vision API モジュール
+│   │   ├── domain/          # AIResult エンティティ、リポジトリIF
+│   │   ├── usecase/         # AI補正ユースケース
+│   │   └── presentation/    # Vision API ハンドラー
+│   ├── household/           # 家計簿モジュール
+│   │   ├── domain/          # Receipt, ExpenseEntry エンティティ
+│   │   ├── usecase/         # Receipt, Household ユースケース
+│   │   └── presentation/    # Web UI ハンドラー
+│   └── shared/              # 共有インフラストラクチャ
+│       └── infrastructure/  # AI, Database, Cache 実装
+├── presentation/            # プレゼンテーション層統合
+│   ├── di/                  # DIコンテナ
+│   └── http/                # ルーター、ミドルウェア
+└── config/                  # 設定管理
+```
+
+### Clean Architecture レイヤー
+
 ```text
 ┌─────────────────────────────────────────────┐
 │ Presentation Layer                          │
-│  - HTTP Handlers (net/http)                 │
+│  - Web UI Handlers (html/template)          │
+│  - API Handlers (net/http)                  │
 │  - Middleware (CORS, Logging, Recovery)     │
 │  - DI Container                             │
 ├─────────────────────────────────────────────┤
 │ UseCase Layer                               │
-│  - AI Correction UseCase                    │
+│  - Vision: AI Correction UseCase            │
+│  - Household: Receipt, Household UseCase    │
 ├─────────────────────────────────────────────┤
 │ Domain Layer                                │
-│  - Entities (Receipt, ExpenseEntry, etc.)   │
+│  - Vision: AIResult                         │
+│  - Household: Receipt, ExpenseEntry         │
 │  - Repository Interfaces                    │
-│  - Domain Services (Validator)              │
 ├─────────────────────────────────────────────┤
-│ Infrastructure Layer                        │
+│ Infrastructure Layer (Shared)               │
 │  - Claude Repository (Vision API)           │
 │  - BUN Repository (MySQL)                   │
 │  - Redis Repository (Cache)                 │
@@ -75,7 +105,33 @@ docker compose down
 docker compose down -v
 ```
 
-### APIの使用
+### Web UIの使用
+
+#### 1. レシート登録画面
+
+ブラウザで `http://localhost:8080/` にアクセス
+
+- ファイル選択ボタンから画像をアップロード（モバイルではカメラも選択可能）
+- プレビュー表示後、アップロードボタンをクリック
+- 自動的に結果画面にリダイレクト
+
+#### 2. レシート認識結果画面
+
+`http://localhost:8080/result?id=xxx`
+
+- 店舗名、購入日時、合計金額、税額を表示
+- 商品明細（名前、数量、価格）を表形式で表示
+- 家計簿一覧へのリンク
+
+#### 3. 家計簿一覧画面
+
+`http://localhost:8080/household`
+
+- カテゴリ別集計（件数、合計金額）
+- レシート一覧テーブル（日付降順）
+- クリックでレシート詳細表示
+
+### REST APIの使用
 
 #### 1. ヘルスチェック
 
@@ -234,23 +290,27 @@ mysql:
 │       ├── main.go              # エントリーポイント
 │       └── main_test.go         # Seamパターンによるテスト
 ├── internal/
-│   ├── domain/                  # Domain Layer
-│   │   ├── entity/              # エンティティ（Receipt, ExpenseEntry, etc.）
-│   │   ├── repository/          # リポジトリインターフェース
-│   │   └── service/             # ドメインサービス（Validator）
-│   ├── usecase/                 # UseCase Layer
-│   │   └── ai_correction_usecase.go
-│   ├── infrastructure/          # Infrastructure Layer
-│   │   ├── ai/                  # Claude Vision API実装
-│   │   ├── database/            # BUN ORM実装（MySQL）
-│   │   └── cache/               # Redis実装
-│   ├── presentation/            # Presentation Layer
-│   │   ├── http/                # HTTP API
-│   │   │   ├── handler/         # HTTPハンドラー
-│   │   │   ├── middleware/      # ミドルウェア（log/slog使用）
-│   │   │   └── router/          # ルーター
-│   │   └── di/                  # DIコンテナ
+│   ├── modules/                 # Modular Monolith モジュール
+│   │   ├── vision/              # Vision API モジュール
+│   │   │   ├── domain/          # AIResult エンティティ
+│   │   │   ├── usecase/         # AI補正ユースケース
+│   │   │   └── presentation/    # Vision API ハンドラー
+│   │   ├── household/           # 家計簿モジュール
+│   │   │   ├── domain/          # Receipt, ExpenseEntry エンティティ
+│   │   │   ├── usecase/         # Receipt, Household ユースケース
+│   │   │   └── presentation/    # Web UI ハンドラー
+│   │   └── shared/              # 共有インフラストラクチャ
+│   │       └── infrastructure/  # AI, Database, Cache 実装
+│   ├── presentation/            # プレゼンテーション層統合
+│   │   ├── di/                  # DIコンテナ
+│   │   └── http/                # ルーター、ミドルウェア
 │   └── config/                  # 設定管理
+├── web/                         # Web UI リソース
+│   ├── templates/               # html/template
+│   │   ├── layout/              # ベースレイアウト
+│   │   └── pages/               # ページテンプレート
+│   └── static/                  # 静的ファイル
+│       └── css/                 # スタイルシート
 ├── scripts/
 │   └── init.sql                 # MySQL初期化スクリプト
 ├── testdata/                    # テストデータ
@@ -306,20 +366,14 @@ make clean             # クリーンアップ
 
 ## テストカバレッジ
 
-- **cmd/app**: 66.7%
-- **config**: 76.5%
-- **domain/entity**: 100.0%
-- **domain/service**: 90.9%
-- **usecase**: 100.0%
-- **infrastructure/ai**: 66.1%
-- **infrastructure/cache**: 71.4%
-- **infrastructure/database**: 79.3%
-- **presentation/di**: 100.0%
-- **presentation/http/handler**: 94.6%
+- **config**: 90.9%
+- **modules/vision/domain**: 100.0%
+- **modules/vision/usecase**: 100.0%
+- **modules/household/domain/entity**: 100.0%
+- **modules/household/usecase**: 94.4%
 - **presentation/http/middleware**: 100.0%
-- **presentation/http/router**: 100.0%
 
-**全体**: **80%以上達成**
+**全体**: **90%以上達成**（ユニットテスト）
 
 ## 技術スタック
 
@@ -454,6 +508,6 @@ MIT License
 
 ---
 
-**最終更新**: 2025-11-22  
-**バージョン**: 3.0.0  
+**最終更新**: 2025-11-24  
+**バージョン**: 3.0.0 (Modular Monolith + Web UI)  
 **作成者**: Yuji Okamoto

@@ -2,97 +2,122 @@ package di
 
 import (
 	"fmt"
+
 	"vision-api-app/internal/config"
-	"vision-api-app/internal/domain/repository"
-	"vision-api-app/internal/infrastructure/ai"
-	"vision-api-app/internal/infrastructure/cache"
-	"vision-api-app/internal/infrastructure/database"
-	"vision-api-app/internal/usecase"
+	householdHandler "vision-api-app/internal/modules/household/presentation/handler"
+	householdUsecase "vision-api-app/internal/modules/household/usecase"
+	sharedAI "vision-api-app/internal/modules/shared/infrastructure/ai"
+	sharedCache "vision-api-app/internal/modules/shared/infrastructure/cache"
+	sharedDB "vision-api-app/internal/modules/shared/infrastructure/database"
+	visionHandler "vision-api-app/internal/modules/vision/presentation/handler"
+	visionUsecase "vision-api-app/internal/modules/vision/usecase"
 )
 
 // Container DIコンテナ
 type Container struct {
-	config *config.Config
+	// Shared Infrastructure
+	aiRepo      *sharedAI.ClaudeRepository
+	cacheRepo   *sharedCache.RedisRepository
+	receiptRepo *sharedDB.BunReceiptRepository
+	expenseRepo *sharedDB.BunExpenseRepository
 
-	// Repositories
-	aiRepo      repository.AIRepository
-	cacheRepo   repository.CacheRepository
-	receiptRepo repository.ReceiptRepository
+	// Vision Module
+	aiCorrectionUseCase *visionUsecase.AICorrectionUseCase
+	visionHandler       *visionHandler.VisionHandler
 
-	// UseCases
-	aiCorrectionUseCase *usecase.AICorrectionUseCase
+	// Household Module
+	receiptUseCase   *householdUsecase.ReceiptUseCase
+	householdUseCase *householdUsecase.HouseholdUseCase
+	webHandler       *householdHandler.WebHandler
 }
 
-// NewContainer 新しいDIコンテナを作成
+// NewContainer 新しいContainerを作成
 func NewContainer(cfg *config.Config) (*Container, error) {
-	c := &Container{
-		config: cfg,
-	}
+	container := &Container{}
 
-	// Repositoriesの初期化
-	c.aiRepo = ai.NewClaudeRepository(&cfg.Anthropic)
+	// Shared Infrastructure: AI Repository
+	aiRepo := sharedAI.NewClaudeRepository(&cfg.Anthropic)
+	container.aiRepo = aiRepo
 
-	// Redis Repository
-	redisRepo, err := cache.NewRedisRepository(&cfg.Redis)
+	// Shared Infrastructure: Cache Repository
+	cacheRepo, err := sharedCache.NewRedisRepository(&cfg.Redis)
 	if err != nil {
-		// Redisが利用できない場合はnilのまま（オプショナル）
-		fmt.Printf("Warning: Redis not available: %v\n", err)
-		c.cacheRepo = nil
-	} else {
-		fmt.Printf("✅ Redis connected successfully\n")
-		c.cacheRepo = redisRepo
+		return nil, fmt.Errorf("failed to initialize cache repository: %w", err)
 	}
+	container.cacheRepo = cacheRepo
 
-	// Receipt Repository
-	receiptRepo, err := database.NewBunReceiptRepository(&cfg.MySQL)
+	// Shared Infrastructure: Receipt Repository
+	receiptRepo, err := sharedDB.NewBunReceiptRepository(&cfg.MySQL)
 	if err != nil {
-		// MySQLが利用できない場合はnilのまま（オプショナル）
-		fmt.Printf("Warning: MySQL not available: %v\n", err)
-		c.receiptRepo = nil
-	} else {
-		fmt.Printf("✅ MySQL connected successfully\n")
-		c.receiptRepo = receiptRepo
+		return nil, fmt.Errorf("failed to initialize receipt repository: %w", err)
 	}
+	container.receiptRepo = receiptRepo
 
-	// UseCasesの初期化（DIによる依存性注入）
-	c.aiCorrectionUseCase = usecase.NewAICorrectionUseCase(c.aiRepo)
+	// Shared Infrastructure: Expense Repository
+	expenseRepo, err := sharedDB.NewBunExpenseRepository(&cfg.MySQL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize expense repository: %w", err)
+	}
+	container.expenseRepo = expenseRepo
 
-	return c, nil
+	// Vision Module: UseCase
+	aiCorrectionUseCase := visionUsecase.NewAICorrectionUseCase(aiRepo)
+	container.aiCorrectionUseCase = aiCorrectionUseCase
+
+	// Vision Module: Handler
+	visionHandler := visionHandler.NewVisionHandler(aiCorrectionUseCase, cacheRepo)
+	container.visionHandler = visionHandler
+
+	// Household Module: Receipt UseCase
+	receiptUseCase := householdUsecase.NewReceiptUseCase(aiRepo, receiptRepo)
+	container.receiptUseCase = receiptUseCase
+
+	// Household Module: Household UseCase
+	householdUseCase := householdUsecase.NewHouseholdUseCase(receiptRepo, expenseRepo)
+	container.householdUseCase = householdUseCase
+
+	// Household Module: Web Handler
+	webHandler, err := householdHandler.NewWebHandler(receiptUseCase, householdUseCase)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize web handler: %w", err)
+	}
+	container.webHandler = webHandler
+
+	return container, nil
 }
 
-// Config 設定を返す
-func (c *Container) Config() *config.Config {
-	return c.config
-}
-
-// AICorrectionUseCase AI補正ユースケースを返す
-func (c *Container) AICorrectionUseCase() *usecase.AICorrectionUseCase {
+// AICorrectionUseCase Vision AI補正ユースケースを取得
+func (c *Container) AICorrectionUseCase() *visionUsecase.AICorrectionUseCase {
 	return c.aiCorrectionUseCase
 }
 
-// CacheRepository キャッシュリポジトリを返す
-func (c *Container) CacheRepository() repository.CacheRepository {
-	return c.cacheRepo
+// VisionHandler Vision APIハンドラーを取得
+func (c *Container) VisionHandler() *visionHandler.VisionHandler {
+	return c.visionHandler
 }
 
-// ReceiptRepository レシートリポジトリを返す
-func (c *Container) ReceiptRepository() repository.ReceiptRepository {
-	return c.receiptRepo
+// WebHandler Web UIハンドラーを取得
+func (c *Container) WebHandler() *householdHandler.WebHandler {
+	return c.webHandler
 }
 
-// Close リソースを解放
+// Close リソースをクローズ
 func (c *Container) Close() error {
-	// Redis接続を閉じる
 	if c.cacheRepo != nil {
-		if closer, ok := c.cacheRepo.(interface{ Close() error }); ok {
-			_ = closer.Close()
+		if err := c.cacheRepo.Close(); err != nil {
+			return fmt.Errorf("failed to close cache repository: %w", err)
 		}
 	}
 
-	// MySQL接続を閉じる
 	if c.receiptRepo != nil {
-		if closer, ok := c.receiptRepo.(interface{ Close() error }); ok {
-			_ = closer.Close()
+		if err := c.receiptRepo.Close(); err != nil {
+			return fmt.Errorf("failed to close receipt repository: %w", err)
+		}
+	}
+
+	if c.expenseRepo != nil {
+		if err := c.expenseRepo.Close(); err != nil {
+			return fmt.Errorf("failed to close expense repository: %w", err)
 		}
 	}
 

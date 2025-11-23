@@ -157,11 +157,14 @@ func TestApp_Components(t *testing.T) {
 		if app.container == nil {
 			t.Error("container is nil")
 		}
-		if app.container.Config() == nil {
-			t.Error("container.Config() is nil")
-		}
 		if app.container.AICorrectionUseCase() == nil {
 			t.Error("container.AICorrectionUseCase() is nil")
+		}
+		if app.container.VisionHandler() == nil {
+			t.Error("container.VisionHandler() is nil")
+		}
+		if app.container.WebHandler() == nil {
+			t.Error("container.WebHandler() is nil")
 		}
 	})
 
