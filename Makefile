@@ -7,17 +7,17 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 docker-build: ## Build Docker image
-	docker build --no-cache -t tesseract-ocr-app:latest .
+	docker build --no-cache -t vision-api-app:latest .
 
 docker-run: ## Run application in Docker
 	docker compose up
 
 docker-test: ## Run tests in Docker
-	docker build --no-cache -t tesseract-ocr-app:test .
-	docker run --rm tesseract-ocr-app:test go test -v ./internal/domain/... ./internal/usecase/... ./internal/config/...
+	docker build --no-cache -t vision-api-app:test .
+	docker run --rm vision-api-app:test go test -v ./...
 
 docker-shell: ## Open shell in Docker container
-	docker run --rm -it tesseract-ocr-app:latest /bin/sh
+	docker run --rm -it vision-api-app:latest /bin/sh
 
 test: ## Run tests locally
 	go test -v -cover ./...
@@ -30,7 +30,7 @@ lint: ## Run linter
 	golangci-lint run ./...
 
 clean: ## Clean build artifacts
-	rm -f tesseract-ocr-app
+	rm -f vision-api-app
 	rm -f coverage.out
 	go clean -cache -testcache
 
