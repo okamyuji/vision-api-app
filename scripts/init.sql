@@ -24,14 +24,16 @@ CREATE TABLE IF NOT EXISTS receipts (
 
 -- Receipt items table
 CREATE TABLE IF NOT EXISTS receipt_items (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY COMMENT 'レシートID(36文字) + ハイフン + インデックス(8桁) = 45文字',
     receipt_id VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
     price INT NOT NULL,
+    category VARCHAR(50) COMMENT '明細項目のカテゴリー',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE,
-    INDEX idx_receipt_id (receipt_id)
+    INDEX idx_receipt_id (receipt_id),
+    INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Expense entries table

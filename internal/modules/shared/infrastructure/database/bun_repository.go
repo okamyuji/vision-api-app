@@ -42,6 +42,7 @@ type ReceiptItem struct {
 	Name      string    `bun:"name,notnull"`
 	Quantity  int       `bun:"quantity,notnull,default:1"`
 	Price     int       `bun:"price,notnull"`
+	Category  *string   `bun:"category,type:varchar(50)"`
 	CreatedAt time.Time `bun:"created_at,notnull,default:current_timestamp"`
 }
 
@@ -241,14 +242,18 @@ func (r *BunReceiptRepository) toModel(receipt *entity.Receipt) *Receipt {
 	}
 
 	for _, item := range receipt.Items {
-		model.Items = append(model.Items, ReceiptItem{
+		bunItem := ReceiptItem{
 			ID:        item.ID,
 			ReceiptID: item.ReceiptID,
 			Name:      item.Name,
 			Quantity:  item.Quantity,
 			Price:     item.Price,
 			CreatedAt: item.CreatedAt,
-		})
+		}
+		if item.Category != "" {
+			bunItem.Category = &item.Category
+		}
+		model.Items = append(model.Items, bunItem)
 	}
 
 	return model
@@ -274,14 +279,18 @@ func (r *BunReceiptRepository) toEntity(model *Receipt) *entity.Receipt {
 	}
 
 	for _, itemModel := range model.Items {
-		receipt.Items = append(receipt.Items, entity.ReceiptItem{
+		item := entity.ReceiptItem{
 			ID:        itemModel.ID,
 			ReceiptID: itemModel.ReceiptID,
 			Name:      itemModel.Name,
 			Quantity:  itemModel.Quantity,
 			Price:     itemModel.Price,
 			CreatedAt: itemModel.CreatedAt,
-		})
+		}
+		if itemModel.Category != nil {
+			item.Category = *itemModel.Category
+		}
+		receipt.Items = append(receipt.Items, item)
 	}
 
 	return receipt

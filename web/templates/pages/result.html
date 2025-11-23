@@ -49,16 +49,20 @@
                     <thead>
                         <tr>
                             <th>商品名</th>
+                            <th>カテゴリー</th>
                             <th>数量</th>
                             <th>価格</th>
+                            <th>小計</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{range .Receipt.Items}}
                         <tr>
                             <td>{{.Name}}</td>
+                            <td><span class="category-badge">{{if .Category}}{{.Category}}{{else}}未分類{{end}}</span></td>
                             <td>{{.Quantity}}</td>
                             <td>¥{{.Price}}</td>
+                            <td>¥{{mul .Price .Quantity}}</td>
                         </tr>
                         {{end}}
                     </tbody>

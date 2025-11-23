@@ -69,7 +69,7 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	container.visionHandler = visionHandler
 
 	// Household Module: Receipt UseCase
-	receiptUseCase := householdUsecase.NewReceiptUseCase(aiRepo, receiptRepo)
+	receiptUseCase := householdUsecase.NewReceiptUseCase(aiRepo, receiptRepo, cacheRepo)
 	container.receiptUseCase = receiptUseCase
 
 	// Household Module: Household UseCase

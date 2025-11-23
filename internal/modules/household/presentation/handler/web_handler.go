@@ -14,21 +14,56 @@ import (
 type WebHandler struct {
 	receiptUseCase   *usecase.ReceiptUseCase
 	householdUseCase *usecase.HouseholdUseCase
-	templates        *template.Template
+	templates        map[string]*template.Template
 }
 
 // NewWebHandler 新しいWebHandlerを作成
 func NewWebHandler(receiptUseCase *usecase.ReceiptUseCase, householdUseCase *usecase.HouseholdUseCase) (*WebHandler, error) {
-	// テンプレートをパース
-	templates, err := template.ParseGlob(filepath.Join("web", "templates", "layout", "*.html"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse layout templates: %w", err)
+	// カスタム関数を定義
+	funcMap := template.FuncMap{
+		"mul": func(a, b int) int {
+			return a * b
+		},
 	}
 
-	templates, err = templates.ParseGlob(filepath.Join("web", "templates", "pages", "*.html"))
+	// テンプレートを事前にパース
+	templates := make(map[string]*template.Template)
+
+	// アップロード画面用テンプレート
+	uploadTmpl, err := template.New("base.html").ParseFiles(
+		filepath.Join("web", "templates", "layout", "base.html"),
+		filepath.Join("web", "templates", "layout", "header.html"),
+		filepath.Join("web", "templates", "layout", "footer.html"),
+		filepath.Join("web", "templates", "pages", "upload.html"),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse page templates: %w", err)
+		return nil, fmt.Errorf("failed to parse upload template: %w", err)
 	}
+	templates["upload"] = uploadTmpl
+
+	// 結果表示画面用テンプレート（カスタム関数付き）
+	resultTmpl, err := template.New("base.html").Funcs(funcMap).ParseFiles(
+		filepath.Join("web", "templates", "layout", "base.html"),
+		filepath.Join("web", "templates", "layout", "header.html"),
+		filepath.Join("web", "templates", "layout", "footer.html"),
+		filepath.Join("web", "templates", "pages", "result.html"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse result template: %w", err)
+	}
+	templates["result"] = resultTmpl
+
+	// 家計簿一覧画面用テンプレート
+	householdTmpl, err := template.New("base.html").ParseFiles(
+		filepath.Join("web", "templates", "layout", "base.html"),
+		filepath.Join("web", "templates", "layout", "header.html"),
+		filepath.Join("web", "templates", "layout", "footer.html"),
+		filepath.Join("web", "templates", "pages", "household.html"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse household template: %w", err)
+	}
+	templates["household"] = householdTmpl
 
 	return &WebHandler{
 		receiptUseCase:   receiptUseCase,
@@ -48,8 +83,8 @@ func (h *WebHandler) HandleUploadPage(w http.ResponseWriter, r *http.Request) {
 		"Title": "レシート登録",
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	if err := h.templates["upload"].ExecuteTemplate(w, "base.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -87,13 +122,7 @@ func (h *WebHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	// レシート処理
 	receipt, err := h.receiptUseCase.ProcessReceiptImage(r.Context(), imageData)
 	if err != nil {
-		data := map[string]interface{}{
-			"Title": "エラー",
-			"Error": fmt.Sprintf("レシート認識に失敗しました: %v", err),
-		}
-		if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-			http.Error(w, "Failed to render template", http.StatusInternalServerError)
-		}
+		http.Error(w, fmt.Sprintf("レシート認識に失敗しました: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -118,13 +147,7 @@ func (h *WebHandler) HandleResult(w http.ResponseWriter, r *http.Request) {
 	// レシート取得
 	receipt, err := h.receiptUseCase.GetReceipt(r.Context(), id)
 	if err != nil {
-		data := map[string]interface{}{
-			"Title": "エラー",
-			"Error": fmt.Sprintf("レシートが見つかりません: %v", err),
-		}
-		if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-			http.Error(w, "Failed to render template", http.StatusInternalServerError)
-		}
+		http.Error(w, fmt.Sprintf("レシートが見つかりません: %v", err), http.StatusNotFound)
 		return
 	}
 
@@ -133,8 +156,8 @@ func (h *WebHandler) HandleResult(w http.ResponseWriter, r *http.Request) {
 		"Receipt": receipt,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	if err := h.templates["result"].ExecuteTemplate(w, "base.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -166,8 +189,8 @@ func (h *WebHandler) HandleHousehold(w http.ResponseWriter, r *http.Request) {
 		"CategorySummary": summary,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	if err := h.templates["household"].ExecuteTemplate(w, "base.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

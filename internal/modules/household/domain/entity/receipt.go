@@ -26,6 +26,7 @@ type ReceiptItem struct {
 	Name      string
 	Quantity  int
 	Price     int
+	Category  string // 明細項目のカテゴリー
 	CreatedAt time.Time
 }
 

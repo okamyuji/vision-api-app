@@ -10,7 +10,7 @@ import (
 type CategorySummary struct {
 	Category string
 	Count    int
-	Total    int
+	Total    int64 // オーバーフロー対策のためint64を使用
 }
 
 // HouseholdUseCase 家計簿集計のユースケース
@@ -27,7 +27,7 @@ func NewHouseholdUseCase(receiptRepo repository.ReceiptRepository, expenseRepo r
 	}
 }
 
-// GetCategorySummary カテゴリ別集計を取得（receipts + expense_entries）
+// GetCategorySummary カテゴリ別集計を取得（明細項目ベース + expense_entries）
 func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategorySummary, error) {
 	// レシート一覧を取得
 	receipts, err := uc.receiptRepo.FindAll(ctx, 0, 0)
@@ -44,20 +44,24 @@ func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategoryS
 	// カテゴリ別に集計
 	summaryMap := make(map[string]*CategorySummary)
 
-	// レシートを集計
+	// レシートの明細項目を集計（項目ごとに仕訳）
 	for _, receipt := range receipts {
-		if receipt.Category == "" {
-			continue
-		}
-		if _, exists := summaryMap[receipt.Category]; !exists {
-			summaryMap[receipt.Category] = &CategorySummary{
-				Category: receipt.Category,
-				Count:    0,
-				Total:    0,
+		for _, item := range receipt.Items {
+			category := item.Category
+			if category == "" {
+				category = "その他"
 			}
+			if _, exists := summaryMap[category]; !exists {
+				summaryMap[category] = &CategorySummary{
+					Category: category,
+					Count:    0,
+					Total:    0,
+				}
+			}
+			summaryMap[category].Count++
+			// int64で安全に計算
+			summaryMap[category].Total += int64(item.Price) * int64(item.Quantity)
 		}
-		summaryMap[receipt.Category].Count++
-		summaryMap[receipt.Category].Total += receipt.TotalAmount
 	}
 
 	// 家計簿エントリを集計
@@ -73,7 +77,7 @@ func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategoryS
 			}
 		}
 		summaryMap[expense.Category].Count++
-		summaryMap[expense.Category].Total += expense.Amount
+		summaryMap[expense.Category].Total += int64(expense.Amount)
 	}
 
 	// マップをスライスに変換
