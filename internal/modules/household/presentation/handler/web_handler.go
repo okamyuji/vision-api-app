@@ -48,8 +48,9 @@ func (h *WebHandler) HandleUploadPage(w http.ResponseWriter, r *http.Request) {
 		"Title": "レシート登録",
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	// upload.htmlのcontentを含むbase.htmlを実行
+	if err := h.templates.ExecuteTemplate(w, "upload.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -133,8 +134,9 @@ func (h *WebHandler) HandleResult(w http.ResponseWriter, r *http.Request) {
 		"Receipt": receipt,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	// result.htmlのcontentを含むbase.htmlを実行
+	if err := h.templates.ExecuteTemplate(w, "result.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -166,8 +168,9 @@ func (h *WebHandler) HandleHousehold(w http.ResponseWriter, r *http.Request) {
 		"CategorySummary": summary,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	// household.htmlのcontentを含むbase.htmlを実行
+	if err := h.templates.ExecuteTemplate(w, "household.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
