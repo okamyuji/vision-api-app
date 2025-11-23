@@ -19,15 +19,15 @@ docker-test: ## Run tests in Docker
 docker-shell: ## Open shell in Docker container
 	docker run --rm -it tesseract-ocr-app:latest /bin/sh
 
-test: ## Run tests locally (without Infrastructure layer)
-	go test -v -cover ./internal/domain/... ./internal/usecase/... ./internal/config/...
+test: ## Run tests locally
+	go test -v -cover ./...
 
 test-coverage: ## Run tests with coverage report
-	go test -coverprofile=coverage.out ./internal/domain/... ./internal/usecase/... ./internal/config/...
+	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
-lint: ## Run linter (without Infrastructure layer)
-	golangci-lint run --build-tags=no_tesseract,no_opencv ./...
+lint: ## Run linter
+	golangci-lint run ./...
 
 clean: ## Clean build artifacts
 	rm -f tesseract-ocr-app
