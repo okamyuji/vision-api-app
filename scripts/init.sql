@@ -29,9 +29,11 @@ CREATE TABLE IF NOT EXISTS receipt_items (
     name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
     price INT NOT NULL,
+    category VARCHAR(50) COMMENT '明細項目のカテゴリー',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE,
-    INDEX idx_receipt_id (receipt_id)
+    INDEX idx_receipt_id (receipt_id),
+    INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Expense entries table

@@ -74,10 +74,21 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 		wantCategory string
 	}{
 		{
-			name: "正常なカテゴリ集計",
+			name: "正常なカテゴリ集計（明細項目ベース）",
 			receipts: []*entity.Receipt{
-				{ID: "1", Category: "食費", TotalAmount: 1000},
-				{ID: "2", Category: "食費", TotalAmount: 2000},
+				{
+					ID: "1",
+					Items: []entity.ReceiptItem{
+						{Name: "牛乳", Category: "食費", Price: 200, Quantity: 1},
+						{Name: "パン", Category: "食費", Price: 150, Quantity: 2},
+					},
+				},
+				{
+					ID: "2",
+					Items: []entity.ReceiptItem{
+						{Name: "シャンプー", Category: "日用品", Price: 500, Quantity: 1},
+					},
+				},
 			},
 			expenses: []*entity.ExpenseEntry{
 				{ID: "3", Category: "交通費", Amount: 500},
@@ -85,7 +96,7 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 			receiptErr:   nil,
 			expenseErr:   nil,
 			wantErr:      false,
-			wantCount:    2,
+			wantCount:    3, // 食費、日用品、交通費
 			wantCategory: "食費",
 		},
 		{
@@ -114,6 +125,46 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 			expenseErr: nil,
 			wantErr:    false,
 			wantCount:  0,
+		},
+		{
+			name: "カテゴリー未設定の明細項目",
+			receipts: []*entity.Receipt{
+				{
+					ID: "1",
+					Items: []entity.ReceiptItem{
+						{Name: "商品A", Category: "", Price: 100, Quantity: 1},
+						{Name: "商品B", Category: "食費", Price: 200, Quantity: 1},
+					},
+				},
+			},
+			expenses:     []*entity.ExpenseEntry{},
+			receiptErr:   nil,
+			expenseErr:   nil,
+			wantErr:      false,
+			wantCount:    2, // 食費、その他
+			wantCategory: "",
+		},
+		{
+			name: "複数カテゴリーの混在",
+			receipts: []*entity.Receipt{
+				{
+					ID: "1",
+					Items: []entity.ReceiptItem{
+						{Name: "牛乳", Category: "食費", Price: 200, Quantity: 1},
+						{Name: "シャンプー", Category: "日用品", Price: 500, Quantity: 1},
+						{Name: "風邪薬", Category: "医療費", Price: 1200, Quantity: 1},
+					},
+				},
+			},
+			expenses: []*entity.ExpenseEntry{
+				{ID: "1", Category: "食費", Amount: 300},
+				{ID: "2", Category: "交通費", Amount: 500},
+			},
+			receiptErr:   nil,
+			expenseErr:   nil,
+			wantErr:      false,
+			wantCount:    4, // 食費、日用品、医療費、交通費
+			wantCategory: "",
 		},
 	}
 
@@ -156,8 +207,9 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 					for _, s := range summary {
 						if s.Category == tt.wantCategory {
 							found = true
-							if s.Total != 3000 { // 1000 + 2000
-								t.Errorf("Expected total 3000 for category %s, got %d", tt.wantCategory, s.Total)
+							// 明細項目ベースの集計: 牛乳(200*1) + パン(150*2) = 500
+							if s.Total != 500 {
+								t.Errorf("Expected total 500 for category %s, got %d", tt.wantCategory, s.Total)
 							}
 							break
 						}
