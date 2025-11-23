@@ -338,8 +338,8 @@ func TestReceiptUseCase_ProcessReceiptImage_Deduplication(t *testing.T) {
 	}
 }
 
-// TestReceiptUseCase_generateReceiptID レシートID生成のテスト
-func TestReceiptUseCase_generateReceiptID(t *testing.T) {
+// TestReceiptUseCase_generateDeterministicReceiptID 決定的なレシートID生成のテスト
+func TestReceiptUseCase_generateDeterministicReceiptID(t *testing.T) {
 	uc := NewReceiptUseCase(nil, nil, nil)
 
 	tests := []struct {
@@ -350,11 +350,16 @@ func TestReceiptUseCase_generateReceiptID(t *testing.T) {
 		{
 			name:      "正常なID生成",
 			imageData: []byte("test image"),
-			wantLen:   36, // UUID形式
+			wantLen:   36, // UUID形式の文字列長
 		},
 		{
 			name:      "異なる画像で異なるID",
 			imageData: []byte("different image"),
+			wantLen:   36,
+		},
+		{
+			name:      "空の画像データ",
+			imageData: []byte(""),
 			wantLen:   36,
 		},
 	}
@@ -362,29 +367,68 @@ func TestReceiptUseCase_generateReceiptID(t *testing.T) {
 	ids := make(map[string]bool)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id := uc.generateReceiptID(tt.imageData)
+			id := uc.generateDeterministicReceiptID(tt.imageData)
 			if len(id) != tt.wantLen {
-				t.Errorf("generateReceiptID() length = %d, want %d", len(id), tt.wantLen)
+				t.Errorf("generateDeterministicReceiptID() length = %d, want %d", len(id), tt.wantLen)
 			}
-			// UUID形式（8-4-4-4-12）を確認
+			// UUID形式の文字列構造（8-4-4-4-12）を確認
 			if id[8] != '-' || id[13] != '-' || id[18] != '-' || id[23] != '-' {
-				t.Errorf("generateReceiptID() format invalid: %s", id)
+				t.Errorf("generateDeterministicReceiptID() format invalid: %s", id)
+			}
+			// 16進数文字のみであることを確認（ハイフンを除く）
+			for i, c := range id {
+				if i == 8 || i == 13 || i == 18 || i == 23 {
+					continue // ハイフンの位置はスキップ
+				}
+				if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+					t.Errorf("generateDeterministicReceiptID() contains non-hex character at position %d: %c", i, c)
+				}
 			}
 			// 重複チェック
 			if ids[id] {
-				t.Errorf("generateReceiptID() generated duplicate ID: %s", id)
+				t.Errorf("generateDeterministicReceiptID() generated duplicate ID: %s", id)
 			}
 			ids[id] = true
 		})
 	}
 
-	// 同じ画像データで同じIDが生成されることを確認
-	imageData := []byte("same image")
-	id1 := uc.generateReceiptID(imageData)
-	id2 := uc.generateReceiptID(imageData)
-	if id1 != id2 {
-		t.Errorf("Same image should generate same ID: got %s and %s", id1, id2)
-	}
+	// 決定性のテスト：同じ画像データから常に同じIDが生成されることを確認
+	t.Run("決定性の確認", func(t *testing.T) {
+		imageData := []byte("same image")
+		id1 := uc.generateDeterministicReceiptID(imageData)
+		id2 := uc.generateDeterministicReceiptID(imageData)
+		id3 := uc.generateDeterministicReceiptID(imageData)
+
+		if id1 != id2 {
+			t.Errorf("Same image should generate same ID: got %s and %s", id1, id2)
+		}
+		if id1 != id3 {
+			t.Errorf("Same image should generate same ID: got %s and %s", id1, id3)
+		}
+	})
+
+	// 異なる画像データから異なるIDが生成されることを確認
+	t.Run("一意性の確認", func(t *testing.T) {
+		id1 := uc.generateDeterministicReceiptID([]byte("image1"))
+		id2 := uc.generateDeterministicReceiptID([]byte("image2"))
+		id3 := uc.generateDeterministicReceiptID([]byte("image3"))
+
+		if id1 == id2 || id1 == id3 || id2 == id3 {
+			t.Errorf("Different images should generate different IDs: %s, %s, %s", id1, id2, id3)
+		}
+	})
+
+	// 大きなデータでも正しく動作することを確認
+	t.Run("大きなデータの処理", func(t *testing.T) {
+		largeData := make([]byte, 1024*1024) // 1MB
+		for i := range largeData {
+			largeData[i] = byte(i % 256)
+		}
+		id := uc.generateDeterministicReceiptID(largeData)
+		if len(id) != 36 {
+			t.Errorf("generateDeterministicReceiptID() with large data: length = %d, want 36", len(id))
+		}
+	})
 }
 
 // TestReceiptUseCase_categorizeReceiptItems 明細項目ごとのカテゴリー判定テスト
