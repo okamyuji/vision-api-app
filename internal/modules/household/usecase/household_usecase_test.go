@@ -208,7 +208,7 @@ func TestHouseholdUseCase_GetCategorySummary(t *testing.T) {
 						if s.Category == tt.wantCategory {
 							found = true
 							// 明細項目ベースの集計: 牛乳(200*1) + パン(150*2) = 500
-							if s.Total != 500 {
+							if s.Total != int64(500) {
 								t.Errorf("Expected total 500 for category %s, got %d", tt.wantCategory, s.Total)
 							}
 							break
@@ -261,7 +261,7 @@ func TestHouseholdUseCase_GetCategorySummary_LargeValues(t *testing.T) {
 		t.Errorf("Expected category '食費', got '%s'", summary[0].Category)
 	}
 
-	expectedTotal := 100000000 // 1000000 * 100
+	expectedTotal := int64(100000000) // 1000000 * 100
 	if summary[0].Total != expectedTotal {
 		t.Errorf("Expected total %d, got %d", expectedTotal, summary[0].Total)
 	}

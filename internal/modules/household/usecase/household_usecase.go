@@ -10,7 +10,7 @@ import (
 type CategorySummary struct {
 	Category string
 	Count    int
-	Total    int
+	Total    int64 // オーバーフロー対策のためint64を使用
 }
 
 // HouseholdUseCase 家計簿集計のユースケース
@@ -59,8 +59,8 @@ func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategoryS
 				}
 			}
 			summaryMap[category].Count++
-			// オーバーフロー対策：int64にキャストしてから計算
-			summaryMap[category].Total += int(int64(item.Price) * int64(item.Quantity))
+			// int64で安全に計算
+			summaryMap[category].Total += int64(item.Price) * int64(item.Quantity)
 		}
 	}
 
@@ -77,7 +77,7 @@ func (uc *HouseholdUseCase) GetCategorySummary(ctx context.Context) ([]CategoryS
 			}
 		}
 		summaryMap[expense.Category].Count++
-		summaryMap[expense.Category].Total += expense.Amount
+		summaryMap[expense.Category].Total += int64(expense.Amount)
 	}
 
 	// マップをスライスに変換

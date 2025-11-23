@@ -233,13 +233,21 @@ func (uc *ReceiptUseCase) categorizeReceiptItems(receipt *entity.Receipt) error 
 
 	result, err := uc.aiRepo.CategorizeReceipt(itemsInfo)
 	if err != nil {
-		return fmt.Errorf("failed to categorize items: %w", err)
+		// AI APIエラーの場合は全てデフォルトカテゴリーを設定
+		for i := range receipt.Items {
+			receipt.Items[i].Category = "その他"
+		}
+		return nil
 	}
 
 	// レスポンスをパース
 	categories, err := uc.parseItemCategories(result.CorrectedText, len(receipt.Items))
 	if err != nil {
-		return fmt.Errorf("failed to parse categories: %w", err)
+		// パースエラーの場合は全てデフォルトカテゴリーを設定
+		for i := range receipt.Items {
+			receipt.Items[i].Category = "その他"
+		}
+		return nil
 	}
 
 	// 各明細項目にカテゴリーを設定

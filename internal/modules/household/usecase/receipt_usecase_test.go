@@ -517,7 +517,7 @@ func TestReceiptUseCase_categorizeReceiptItems(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name: "AI APIエラー",
+			name: "AI APIエラー（デフォルトカテゴリーを設定）",
 			receipt: &entity.Receipt{
 				StoreName: "テスト店",
 				Items: []entity.ReceiptItem{
@@ -526,8 +526,22 @@ func TestReceiptUseCase_categorizeReceiptItems(t *testing.T) {
 			},
 			aiResponse:     "",
 			aiErr:          errors.New("AI error"),
-			wantCategories: nil,
-			wantErr:        true,
+			wantCategories: []string{"その他"}, // エラー時はデフォルトカテゴリー
+			wantErr:        false,           // エラーハンドリングを変更したのでエラーにならない
+		},
+		{
+			name: "パースエラー（デフォルトカテゴリーを設定）",
+			receipt: &entity.Receipt{
+				StoreName: "テスト店",
+				Items: []entity.ReceiptItem{
+					{Name: "商品A", Quantity: 1, Price: 100},
+					{Name: "商品B", Quantity: 2, Price: 200},
+				},
+			},
+			aiResponse:     "", // 空文字列でパースエラーを発生させる
+			aiErr:          nil,
+			wantCategories: []string{"その他", "その他"}, // パースエラー時はデフォルトカテゴリー
+			wantErr:        false,                  // エラーハンドリングを変更したのでエラーにならない
 		},
 		{
 			name: "空の明細",

@@ -14,7 +14,6 @@ import (
 type WebHandler struct {
 	receiptUseCase   *usecase.ReceiptUseCase
 	householdUseCase *usecase.HouseholdUseCase
-	templates        *template.Template
 }
 
 // NewWebHandler 新しいWebHandlerを作成
@@ -22,7 +21,6 @@ func NewWebHandler(receiptUseCase *usecase.ReceiptUseCase, householdUseCase *use
 	return &WebHandler{
 		receiptUseCase:   receiptUseCase,
 		householdUseCase: householdUseCase,
-		templates:        nil, // テンプレートはリクエストごとにパースする
 	}, nil
 }
 
