@@ -1,0 +1,14 @@
+name: Security scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    uses: okamyuji/reusable-workflows/.github/workflows/security-scan.yml@v1
