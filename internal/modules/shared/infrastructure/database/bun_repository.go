@@ -153,10 +153,10 @@ func (r *BunReceiptRepository) FindAll(ctx context.Context, limit, offset int) (
 		Order("purchase_date DESC")
 
 	if limit > 0 {
-		query = query.Limit(limit)
+		query = query.Limit(int64(limit))
 	}
 	if offset > 0 {
-		query = query.Offset(offset)
+		query = query.Offset(int64(offset))
 	}
 
 	if err := query.Scan(ctx); err != nil {
@@ -368,10 +368,10 @@ func (r *BunExpenseRepository) FindAll(ctx context.Context, limit, offset int) (
 		Order("date DESC")
 
 	if limit > 0 {
-		query = query.Limit(limit)
+		query = query.Limit(int64(limit))
 	}
 	if offset > 0 {
-		query = query.Offset(offset)
+		query = query.Offset(int64(offset))
 	}
 
 	if err := query.Scan(ctx); err != nil {
